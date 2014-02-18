@@ -132,9 +132,6 @@ public abstract class InboundSmsHandler extends StateMachine {
     protected final Context mContext;
     private final ContentResolver mResolver;
 
-    /** Special handler for WAP push messages. */
-    private final WapPushOverSms mWapPush;
-
     /** Wake lock to ensure device stays awake while dispatching the SMS intents. */
     final PowerManager.WakeLock mWakeLock;
 
@@ -178,7 +175,6 @@ public abstract class InboundSmsHandler extends StateMachine {
         mPhone = phone;
         mCellBroadcastHandler = cellBroadcastHandler;
         mResolver = context.getContentResolver();
-        mWapPush = new WapPushOverSms(context);
 
         boolean smsCapable = mContext.getResources().getBoolean(
                 com.android.internal.R.bool.config_sms_capable);
@@ -218,7 +214,6 @@ public abstract class InboundSmsHandler extends StateMachine {
      */
     @Override
     protected void onQuitting() {
-        mWapPush.dispose();
 
         while (mWakeLock.isHeld()) {
             mWakeLock.release();
@@ -723,10 +718,6 @@ public abstract class InboundSmsHandler extends StateMachine {
                 }
                 output.write(pdu, 0, pdu.length);
             }
-            int result = mWapPush.dispatchWapPdu(output.toByteArray(), resultReceiver, this);
-            if (DBG) log("dispatchWapPdu() returned " + result);
-            // result is Activity.RESULT_OK if an ordered broadcast was sent
-            return (result == Activity.RESULT_OK);
         }
 
         Intent intent;
